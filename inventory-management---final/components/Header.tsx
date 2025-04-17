@@ -40,10 +40,10 @@ export default function Header() {
               Transaktionen
             </Link>
             <Link
-              href="/alle-artikel"
+              href="/all-items"
               className={cn(
-                "transition-colors hover:text-foreground/80 flex items-center",
-                pathname === "/alle-artikel" ? "text-foreground" : "text-foreground/60"
+                "transition-colors hover:text-foreground/80",
+                pathname === "/all-items" ? "text-foreground" : "text-foreground/60"
               )}
             >
               Alle Artikel
