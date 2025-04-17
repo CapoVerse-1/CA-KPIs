@@ -1,90 +1,119 @@
-import React from 'react';
-import { Box, Heading, SimpleGrid, Spinner, Text } from '@chakra-ui/react';
-import Layout from '../components/Layout'; // Assuming Layout component exists
+"use client";
 
-// Placeholder type for item data - will be refined later
-type AggregatedItem = {
-  id: string;
-  name: string;
-  description: string | null;
-  image_url: string | null;
-  initial_stock: number;
-  current_available: number;
-  current_circulation: number;
-  current_burned: number;
-  current_total: number; // initial_stock - burned
-  // Add other relevant item fields if needed
+import React, { useState, useEffect } from 'react';
+import { Loader2, AlertTriangle } from 'lucide-react';
+import { Metadata } from 'next';
+import { fetchAllItems, Item } from '@/lib/api/items'; // Assuming this exists
+import { useUser } from '@/contexts/UserContext';
+import ItemCard from '@/components/ItemCard'; // Use the new ItemCard
+import Header from '@/components/Header';
+
+// Define a simplified item type for this page if needed, or enhance ItemCard to handle missing props
+interface AggregatedItem extends Item {
+  totalQuantity: number;
+  availableQuantity: number;
+  inCirculation: number;
+  // Add other relevant aggregated fields if needed
+}
+
+export const metadata: Metadata = {
+  title: 'Alle Artikel | JTI Inventory Management',
+  description: 'Übersicht aller Originalartikel im JTI Inventory Management System',
 };
 
-const AlleArtikelPage = () => {
-  // Placeholder for data fetching state
-  const [items, setItems] = React.useState<AggregatedItem[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+export default function AlleArtikelPage() {
+  const { currentUser } = useUser();
+  const [items, setItems] = useState<AggregatedItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  React.useEffect(() => {
-    // Placeholder for fetching data
-    // Replace with actual API call later
-    const fetchData = async () => {
-      setIsLoading(true);
+  useEffect(() => {
+    async function loadItems() {
+      if (!currentUser) return;
+      setLoading(true);
       setError(null);
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Simulate empty data for now
-        setItems([]);
-        // TODO: Replace with actual API call to /api/items/all-originals-with-counts
-        // const response = await fetch('/api/items/all-originals-with-counts');
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch items');
-        // }
-        // const data = await response.json();
-        // setItems(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        // TODO: This fetch function likely needs modification 
+        //       to aggregate counts across all brands/promoters.
+        //       Or, we fetch basic item data and ItemCard handles displaying limited info.
+        const fetchedItems = await fetchAllItems(); // Placeholder - needs implementation
 
-    fetchData();
-  }, []);
+        // Placeholder aggregation logic - replace with actual aggregation if needed
+        const aggregatedItems = fetchedItems.map(item => ({
+          ...item,
+          // Dummy data - replace with actual aggregated counts
+          totalQuantity: 0, 
+          availableQuantity: 0,
+          inCirculation: 0,
+          // We need to ensure ItemCard can handle potentially missing itemSizes, quantities etc.
+          // or fetch them here.
+        }));
+
+        setItems(aggregatedItems);
+      } catch (err) {
+        console.error("Error fetching all items:", err);
+        setError(err instanceof Error ? err.message : "Failed to load items");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadItems();
+  }, [currentUser]);
 
   return (
-    <Layout>
-      <Box p={5}>
-        <Heading mb={6}>Alle Artikel</Heading>
-        {isLoading ? (
-          <Spinner />
-        ) : error ? (
-          <Text color="red.500">Error: {error}</Text>
-        ) : items.length === 0 ? (
-          <Text>Keine Artikel gefunden.</Text>
-        ) : (
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
-            {/* TODO: Map over items and render simplified ItemCard components */}
-            {/* Example:
-            {items.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item} // Pass the aggregated data structure
-                available={item.current_available}
-                inCirculation={item.current_circulation}
-                burned={item.current_burned}
-                total={item.current_total}
-                showActions={false} // Prop to hide actions
-                showMenu={false} // Prop to hide menu
-                // Pass other necessary props like refetch function (can be dummy)
-                refetchItems={() => {}} // Provide a no-op function
-              />
-            ))} */}
-            <Text>Item Cards will be displayed here.</Text>
-          </SimpleGrid>
+    <div className="flex flex-col h-screen">
+      <Header title="Alle Artikel" />
+      <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+        {loading && (
+          <div className="flex justify-center items-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Loading all items...</span>
+          </div>
         )}
-      </Box>
-    </Layout>
+        {error && (
+          <div className="text-center text-red-600 p-4">
+            <p>Error: {error}</p>
+          </div>
+        )}
+        {!loading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {items.length > 0 ? (
+              items.map((item) => (
+                // Render the simplified ItemCard 
+                <ItemCard 
+                  key={item.id} 
+                  item={item} 
+                  // Pass dummy/empty props for handlers/data not relevant here
+                  // Or modify ItemCard to not require them when showActions/showMenu are false
+                  itemSizes={{}} // Placeholder 
+                  isPinned={() => false} // Placeholder
+                  isMassEditMode={false} // Placeholder
+                  itemQuantities={{}} // Placeholder
+                  selectedAction={null} // Placeholder
+                  selectedPromoter={null} // Placeholder
+                  handleEdit={() => {}} // No-op
+                  handleToggleInactive={() => {}} // No-op
+                  handleTogglePin={() => {}} // No-op
+                  handleShowHistory={() => {}} // No-op
+                  handleDeleteClick={() => {}} // No-op
+                  stopSharingItem={async () => {}} // No-op
+                  handleQuantityChange={() => {}} // No-op
+                  handleMassEditQuantityChange={() => {}} // No-op
+                  handleMassEditSizeChange={() => {}} // No-op
+                  // Hide actions and menu
+                  showActions={false} 
+                  showMenu={false} 
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center text-gray-500">
+                No items found across all brands.
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+    </div>
   );
-};
-
-export default AlleArtikelPage; 
+} 
