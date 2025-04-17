@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/file-saver": "^2.0.7",
+    "@types/lodash": "^4.17.16"
+  },
+  "dependencies": {
+    "docx": "^9.3.0",
+    "file-saver": "^2.0.5"
+  }
+}
