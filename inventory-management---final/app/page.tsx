@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-export default function Page() {
+export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export default function Page() {
         
         if (data.session) {
           console.log('Root page: User is authenticated, redirecting to /inventory');
-          router.push('/inventory');
+          router.replace('/inventory');
         } else {
           console.log('Root page: User is not authenticated, redirecting to /login');
           router.push('/login');
@@ -29,13 +29,6 @@ export default function Page() {
     checkSession();
   }, [router]);
 
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">JTI 1-2-1 Inventory Management</h1>
-        <p>Redirecting...</p>
-      </div>
-    </div>
-  );
+  return null;
 }
 
